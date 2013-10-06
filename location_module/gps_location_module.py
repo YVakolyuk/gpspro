@@ -1,4 +1,4 @@
-import serial, os, string, math
+import serial, os, string, math, httplib, urllib
 # GPS-based Google Maps search; example finds sandwich nearby
 # Bjoern Hartmann, 10/06/2006
 # requires: pySerial (pyserial.sourceforge.net), pywin32 on Windows (sourceforge.net/projects/pywin32/) 
@@ -22,6 +22,17 @@ def dmmm2dec(degrees,sw):
         ret=ret*(-1) #flip sign if south or west
     return ret
 
+def sendPOST(lat,long,alt):
+    params = urllib.urlencode({'@number': 12, '@type': 'issue', '@action': ''})
+    headers = {"Content-type": "application/x-www-form-urlencoded","Accept": "text/plain"}
+    conn = httplib.HTTPConnection("localhost/gpspro")
+    conn.request("POST", "", params, headers)
+    #response = conn.getresponse()
+    #print response.status, response.reason
+    #data = response.read()
+    #print(data)
+    #conn.close()
+
 # open a connection to NMEA-compatible GPS device at 4800bps8N1 (in this case COM2)
 ser = serial.Serial(port='COM3',baudrate=4800,bytesize=8, parity='N', stopbits=1,timeout=3)
 while 1:
@@ -29,7 +40,7 @@ while 1:
     line = ""
     while not(line.startswith("$GPGGA")):
         line= ser.readline()
-        print(line)
+#        print(line)
     
 
     # calculate our lat+long
@@ -40,6 +51,8 @@ while 1:
         lng = dmmm2dec(float(tokens[4]),tokens[5]) #[4] is long in deg+minutes, [5] is {N|S|W|E}
         print(lat)
         print(lng)
+        print(tokens[9])
+        sendPOST(lat,lng,tokens[9])
     else:
         print("Not")
     # build query string and load it in a new browser
