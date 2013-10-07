@@ -1,17 +1,4 @@
 import serial, os, string, math, httplib, urllib
-# GPS-based Google Maps search; example finds sandwich nearby
-# Bjoern Hartmann, 10/06/2006
-# requires: pySerial (pyserial.sourceforge.net), pywin32 on Windows (sourceforge.net/projects/pywin32/) 
-
-# Execute a local application on system path- see http://effbot.org/librarybook/os.htm
-#def run(program, *args):
-#    for path in string.split(os.environ["PATH"], os.pathsep):
-#        file = os.path.join(path, program) + ".exe"
-#        try:
-#            return os.spawnv(os.P_NOWAIT, file, (program,) + args)
-#        except os.error:
-#            pass
-#    raise os.error, "cannot find executable"
 
 # convert from degree+minutes to decimal degrees (see http://hamlib.sourceforge.net/manuals/1.2.2/html/API-reference/locator_8c.html)
 def dmmm2dec(degrees,sw):
@@ -23,24 +10,18 @@ def dmmm2dec(degrees,sw):
     return ret
 
 def sendPOST(lat,long,alt):
-    params = urllib.urlencode({'@number': 12, '@type': 'issue', '@action': ''})
-    headers = {"Content-type": "application/x-www-form-urlencoded","Accept": "text/plain"}
-    conn = httplib.HTTPConnection("localhost/gpspro")
-    conn.request("POST", "", params, headers)
-    #response = conn.getresponse()
-    #print response.status, response.reason
-    #data = response.read()
-    #print(data)
-    #conn.close()
+    params = urllib.urlencode({'lat': lat, 'lng': long, 'alt': alt})
+    f=urllib.urlopen("http://localhost/gpspro/postlocation.php",params)
+    print f.read()
+
 
 # open a connection to NMEA-compatible GPS device at 4800bps8N1 (in this case COM2)
-ser = serial.Serial(port='COM3',baudrate=4800,bytesize=8, parity='N', stopbits=1,timeout=3)
+ser = serial.Serial(port='COM4',baudrate=4800,bytesize=8, parity='N', stopbits=1,timeout=3)
 while 1:
     # read lines until we find one with the GPS position in it
     line = ""
     while not(line.startswith("$GPGGA")):
         line= ser.readline()
-#        print(line)
     
 
     # calculate our lat+long
@@ -55,8 +36,4 @@ while 1:
         sendPOST(lat,lng,tokens[9])
     else:
         print("Not")
-    # build query string and load it in a new browser
-    #query = "sandwiches"
-    #url = r'"http://maps.google.com/maps?f=l&hl=en&q='+query+'&near='+str(lat)+','+str(lng)+'&ie=UTF8&z=12&om=1"';
-    #run("firefox",url)
 ser.close()
