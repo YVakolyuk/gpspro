@@ -16,7 +16,9 @@
 		var m_lng=36.250;
 		var fl_crPath=0;
 		var trace_id=0;
-		
+		var reCord;
+		var refIntId;
+//		var chkBoxLoad=document.getElementById('ctrlReGetPosition');
 		function initialize() {
 			var poly;
 		
@@ -41,6 +43,53 @@
 				else
 					alert("Необходимо ввести координаты!");
 			});
+			
+			google.maps.event.addDomListener(document.getElementById('ctrlReGetPosition'), 'click', function() {
+				
+				if(document.getElementById('ctrlReGetPosition').checked) {
+					loadControl();
+					refIntId = setInterval(loadControl,7000)
+				}
+				else {
+					clearInterval(refIntId);
+				}
+			});
+			var fl_poly=0;
+			function loadControl() {
+				getPosition();
+				if(fl_poly) {
+					flightPath.setVisible(false);
+					locPoint.setVisible(false);
+				}
+				flightPlanCoordinates=[];
+				//flightPath=null;
+				setTimeout(makeFlightPath, 1000);
+//				alert('One more');
+			}
+			var flightPlanCoordinates=[];
+			var flightPath;
+			var locPoint;
+			
+			function makeFlightPath() {
+				
+				for(var i=0;i<reCord.length;i++) {
+					var myLatlng=new google.maps.LatLng(reCord[i].latitude,reCord[i].longitude);
+					flightPlanCoordinates.push(myLatlng);
+				}
+				flightPath = new google.maps.Polyline({
+					path: flightPlanCoordinates,
+					strokeColor: '#0000FF',
+					strokeWeight: 2,
+				});
+				fl_poly=1;
+				flightPath.setMap(map);
+				var myLatlng=new google.maps.LatLng(reCord[reCord.length-1].latitude,reCord[reCord.length-1].longitude);
+				locPoint = new google.maps.Marker({
+						position: myLatlng,
+						map: map,
+						title: 'Time: '+reCord[reCord.length-1].time+' Alt '+reCord[reCord.length-1].altitude
+				});
+			}
 			
 			google.maps.event.addDomListener(document.getElementById('ctrlCreate'), 'click', function() {
 				if(fl_crPath==0) {
@@ -108,7 +157,7 @@
 		function newTrace() {
 			$$a({
 				type:'get',//тип запроса: get,post либо head
-				url:'http://127.0.0.1/gpspro/POSTnewTrace.php',//url адрес файла обработчика
+				url:'http://127.0.0.1/gpspro/GETnewTrace.php',//url адрес файла обработчика
 				response:'text',//тип возвращаемого ответа text либо xml
 				error:function(num){
 					var arr=['Your browser does not support Ajax',
@@ -122,13 +171,39 @@
 				}
 			});
 		}
+		
+		function getPosition() {
+			$$a({
+				type:'get',//тип запроса: get,post либо head
+				url:'http://127.0.0.1/gpspro/GETposition.php',//url адрес файла обработчика
+				response:'text',//тип возвращаемого ответа text либо xml
+				error:function(num){
+					var arr=['Your browser does not support Ajax',
+                        'Request failed',
+                        'Address does not exist',
+                        'The waiting time left'];
+					alert(arr[num]);
+				},
+				success:function (data) {//возвращаемый результат от сервера
+						reCord = JSON.parse(data);
+				}
+			});
+		}
+		
+		function reInitialize() {
+			document.getElementById('ctrlReGetPosition').checked=false;
+			clearInterval(refIntId);
+			initialize();
+		}
     </script>
   </head>
   <body onload="initialize()">
 	<div id="menu">
 		<section id="set_coordinates" style="height:3%">
 			Latitude: <input type='text' id='latitude'/> &nbsp Longitude: <input type="text" id="longitude" /> &nbsp 
-			<input type="button" id='sCenter' value="Go" /> &nbsp <input type="button" id="ctrlCreate" value="Create a path">
+			<input type="button" id='sCenter' value="Go" /> &nbsp <input type="button" id="ctrlCreate" value="Create a path"> 
+			&nbsp <input type="checkbox" id="ctrlReGetPosition" value="Load position">Load position 
+			&nbsp <input type="button" id="ctrlClear" value="Clear map" onclick="reInitialize()">
 		</section>
 	</div>
     <div id="map_canvas" style="width:100%;height:97%"></div>

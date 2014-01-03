@@ -16,7 +16,7 @@ def sendPOST(lat,long,alt):
 
 
 # open a connection to NMEA-compatible GPS device at 4800bps8N1 (in this case COM2)
-ser = serial.Serial(port='COM3',baudrate=4800,bytesize=8, parity='N', stopbits=1,timeout=3)
+ser = serial.Serial(port='COM4',baudrate=4800,bytesize=8, parity='N', stopbits=1,timeout=3)
 while 1:
     # read lines until we find one with the GPS position in it
     line = ""
