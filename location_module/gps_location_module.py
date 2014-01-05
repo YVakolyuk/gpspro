@@ -11,12 +11,12 @@ def dmmm2dec(degrees,sw):
 
 def sendPOST(lat,long,alt):
     params = urllib.urlencode({'lat': lat, 'lng': long, 'alt': alt})
-    f=urllib.urlopen("http://127.0.0.1/gpspro/postlocation.php",params)
+    f=urllib.urlopen("http://yahacom.ho.ua/POSTLocation.php",params)
     print f.read()
 
 
 # open a connection to NMEA-compatible GPS device at 4800bps8N1 (in this case COM2)
-ser = serial.Serial(port='COM4',baudrate=4800,bytesize=8, parity='N', stopbits=1,timeout=3)
+ser = serial.Serial(port='COM3',baudrate=4800,bytesize=8, parity='N', stopbits=1,timeout=3)
 while 1:
     # read lines until we find one with the GPS position in it
     line = ""
